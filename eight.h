@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct goe {
+struct goe { //game of eight
     char board[9];
     struct goe **moves;
-    unsigned char mcount;
+    unsigned char mc; //move count
 };
 
 typedef struct goe * goeptr;
 
 
-char *mright(char *cstate, char pos);
-char *mleft(char *cstate, char pos);
-char *mdown(char *cstate, char pos);
-char *mup(char *cstate, char pos);
+char *mright(char *cstate);
+char *mleft(char *cstate);
+char *mdown(char *cstate);
+char *mup(char *cstate);
     

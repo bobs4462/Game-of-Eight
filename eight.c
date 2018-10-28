@@ -1,64 +1,115 @@
+//make cl movable
 #include <eight.h>
+#include <btree.h>
 
-const char (*p[4]) (char *, char) = { mright, mleft, mdown, mup };
+const char * (*m[4]) (char *) = { mright, mleft, mdown, mup }; 
 
-goeptr buildss(char initstate[9])
+goeptr buildss(char initstate[9]) //build state-space
 {
-    unsigned int 
-    int clw = 0; nlw = 0; 
+    ui clw = 1, nlw = 0, f = 0, grl = 0; 
     goeptr *cl = NULL, *nl = NULL;
-    goeptr root = malloc(sizeof(struct goe)); 
-    for (int i = 9; i--; root->board[i] = initstate[i]);
+    char testboard[9];
+    stptr index = malloc(sizeof(struct state));
+    nc = 0;
+    goeptr root = create_state(initstate);
+
+    index->val = get_s_code(root->board);
+    index->adr = root;
+    index->left = index->right = NULL;
+
     cl = malloc(sizeof(goeptr));
     cl = root;
-    while (1) {
+
+    while (clw) {
+        for (f = 4; f-->0;) {
+            for (int i = 9; i--; testboard[i] = cl->board[i]); 
+            if ((*m[0]) (testboard))
+                if (attach(index, (grl = get_s_code(testboard)))) {
+                    cl->moves = realloc(cl->moves, sizeof(goeptr) * (++(cl->mc)));
+                    cl->moves[cl->mc - 1] = getadr(index, grl);
+                }
+                else {
+                    nl = realloc(nl, sizeof(goeptr) * (++nlw));
+                    nl[nlw - 1] = create_state(testboard);
+                    insertadr(index, nl[nlw - 1], grl);
+                    cl->moves = realloc(cl->moves, sizeof(goeptr) * (++(cl->mc)));
+                    cl->moves[cl->mc - 1] = nl[nlw - 1];
+                }
+        } 
+    }
         
 }
 
-char *mright(char *cstate, char pos)
+char *mright(char *cstate)//move right
 {
-    int t = 0;
+    int pos = -1;
+    while (cstate[++pos]);
     if (((pos + 1) / 3 == pos / 3) && ((pos + 1) != 9)) {
-        t = cstate[pos];
         cstate[pos] = cstate[pos + 1];
-        cstate[++pos] = t;
+        cstate[++pos] = 0;
         return cstate;
     }
     else return NULL;
 }
 
-char *mleft(char *cstate, char pos)
+char *mleft(char *cstate)//move left
 {
-    int t = 0;
+    int pos = -1;
+    while (cstate[++pos]);
     if (((pos - 1) / 3 == pos / 3) && ((pos - 1) >= 0)) {
-        t = cstate[pos];
         cstate[pos] = cstate[pos - 1];
-        cstate[--pos] = t;
+        cstate[--pos] = 0;
         return cstate;
     }
     else return NULL;
 }
 
-char *mdown(char *cstate, char pos)
+char *mdown(char *cstate) //move down
 {
-    int t = 0;
+    int pos = -1;
+    while (cstate[++pos]);
     if ((pos + 3) < 9) {
-        t = cstate[pos];
-        cstate[pos] = cstate[pos + 1];
-        cstate[++pos] = t;
+        cstate[pos] = cstate[pos + 3];
+        cstate[pos + 3] = 0;
         return cstate;
     }
     else return NULL;
 }
 
-char *mup(char *cstate, char pos)
+char *mup(char *cstate) //move up
 {
-    int t = 0;
+    int pos = -1;
+    while (cstate[++pos]);
     if ((pos - 3) >= 0) {
-        t = cstate[pos];
-        cstate[pos] = cstate[pos + 1];
-        cstate[++pos] = t;
+        cstate[pos] = cstate[pos - 3];
+        cstate[pos - 3] = 0;
         return cstate;
     }
     else return NULL;
+}
+
+ui get_s_code(char *board) //get state code
+{
+    ui code = 0, i = 9;
+    while (i-->0)
+        if (board[i])
+            code = (board[i] - '0') * powoften(i);
+    return code;
+}
+
+ui powoften(ui i) //power of ten
+{
+    ui num = 1;
+    while (i-->0)
+       num *= 10; 
+    return num;
+}
+
+goeptr create_state(char *board)
+{
+    goeptr st = malloc(sizeof(struct goe));
+    for (int i = 9; i--; st->board[i] = board[i]);
+    st->moves = NULL;
+    st->mc = 0;
+    return st;
 }

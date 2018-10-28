@@ -1,10 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <eight.h>
 
 typedef unsigned int ui;
 
 struct state {
     ui val;
+    goeptr adr;
     struct state * left; 
     struct state * right; 
 };

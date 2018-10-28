@@ -1,4 +1,4 @@
-#include "btree.h"
+#include <btree.h>
 ui nc; //node count
 
 int attach(stptr root, ui newval) 
@@ -34,6 +34,43 @@ stptr leaf(ui newval)
     return temp;
 }
 
+goeptr getadr(stptr root, ui code)
+{
+    stptr tracker = root;
+    while (1) {
+        if (code == tracker->val) {
+            return tracker->adr;
+        }
+        else if (code > tracker->val)
+            tracker = tracker->right;
+        else 
+            tracker = tracker->left;
+    }
+}
+
+void insertadr(stptr root, goeptr address, ui code)
+{
+    stptr tracker = root;
+    while (1) {
+        if (code == tracker->val) {
+            tracker->adr = address;
+            break;
+        }
+        else if (code > tracker->val)
+            tracker = tracker->right;
+        else 
+            tracker = tracker->left;
+    }
+}
+
+stptr rebalance(stptr root)
+{
+    stptr * treearray = collapse(root);
+    stptr newroot = restore(treearray, 0, nc - 1);
+    free(treearray);
+    return newroot;
+}
+
 stptr * collapse(stptr root)
 {
     stptr *treearray = malloc(sizeof(stptr) * nc);
@@ -54,14 +91,6 @@ void push(stptr **stack, ui *stsz, stptr node)
 {
     *stack = realloc(*stack, sizeof(stptr) * (++(*stsz)));
     (*stack)[*stsz - 1] = node;
-}
-
-stptr rebalance(stptr root)
-{
-    stptr * treearray = collapse(root);
-    stptr newroot = restore(treearray, 0, nc - 1);
-    free(treearray);
-    return newroot;
 }
 
 stptr pop(stptr **stack, ui *stsz)
