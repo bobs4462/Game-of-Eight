@@ -1,15 +1,8 @@
-unsigned int nc; //state average and node count
+#include "btree.h"
+ui nc; //node count
 
-struct state {
-    unsigned int val;
-    struct statetree * parent; 
-    struct statetree * left; 
-    struct statetree * right; 
-};
-
-typedef state * stptr;
-
-int attach(stptr root, unsigned int newval) {
+int attach(stptr root, ui newval) 
+{
     stptr tracker = root;
     while (1) {
         if (newval == tracker->val)
@@ -17,105 +10,77 @@ int attach(stptr root, unsigned int newval) {
         else if ((newval < tracker->val) && (tracker->left != NULL))
             tracker = tracker->left;
         else if ((newval < tracker->val) && (tracker->left == NULL)) {
-            tracker->left = leaf(tracker, newval); 
+            tracker->left = leaf(newval); 
             return 0;
         }
         else if ((newval > tracker->val) && (tracker->right != NULL))
             tracker = tracker->right;
         else { 
-            tracker->right = leaf(tracker, newval); 
+            tracker->right = leaf(newval); 
             return 0;
         }
     }
 }
 
 
-stptr leaf(stptr parent, unsigned int newval) 
+stptr leaf(ui newval) 
 {
     stptr temp = malloc(sizeof(struct state));
     if(!temp)
         exit(0);
-
     temp->val = newval;
-    temp->parent = parent;
     temp->right = NULL;
     temp->left = NULL;
     return temp;
 }
 
-sptr rebalance(stptr,
-
-int reattach(stptr root, stptr orphan)
+stptr * collapse(stptr root)
 {
-    stptr tracker = root;
-    while (1) {
-        if ((orphan->val < tracker->val) && (tracker->left != NULL))
+    stptr *treearray = malloc(sizeof(stptr) * nc);
+    stptr *stack = malloc(sizeof(stptr));
+    stptr tracker = root; ui stsz = 1, i = 0;
+    do {
+        while (tracker) {
+            push(&stack, &stsz, tracker); 
             tracker = tracker->left;
-        else if ((orphan->val < tracker->val) && (tracker->left == NULL)) {
-            tracker->left = orphan; 
-            orphan->parent = tracker;
-            return 0;
         }
-        else if ((orphan->val > tracker->val) && (tracker->right != NULL))
-            tracker = tracker->right;
-        else { 
-            tracker->right = orphan; 
-            orphan->parent = tracker;
-            return 0;
-        }
-    }
+        treearray[i] = pop(&stack, &stsz);
+        tracker = treearray[i++]->right;
+    } while (i < nc);
+    return treearray;
 }
 
-stptr rootseek(stptr root, double savg)
+void push(stptr **stack, ui *stsz, stptr node)
 {
-    stptr tracker = root;
-
-    while (1) {
-        if ((tracker->val > savg) && (tracker->left != NULL))
-            tracker = tracker->left;
-        else if ((tracker->val > savg) && (tracker->left == NULL))
-            return tracker;
-        else if ((tracker->val < savg) && (tracker->right == NULL))
-            return tracker;
-        else if ((tracker->val < savg) && (tracker->right != NULL))
-            tracker = tracker->left;
-        else
-            return tracker;
-    }
+    *stack = realloc(*stack, sizeof(stptr) * (++(*stsz)));
+    (*stack)[*stsz - 1] = node;
 }
 
-double *average(stptr oldroot, stptr newroot)
+stptr rebalance(stptr root)
 {
-    unsigned int counter[2] = {0};
-    long unsigned int acc[2] = {0};
-    double *result = malloc(sizeof(double) * 2);
-    int opsz = 1;
-    stptr *OPEN = malloc(sizeof(stptr));
-    OPEN = oldroot;
-    while(OPEN) {
-        if (OPEN->left != NULL) {
-            OPEN = realloc(OPEN, sizeof(stptr) * (++opsz));
-            OPEN[opsz - 1] = OPEN->left;
-        }
-        if (OPEN->right != NULL) {
-            OPEN = realloc(OPEN, sizeof(stptr) * (++opsz));
-            OPEN[opsz - 1] = OPEN->right;
-        }
-        if (OPEN->val < newroot->val) {
-            acc[0] += OPEN->val;
-            ++counter[0];
-        }
-        else 
-            acc[1] += OPEN->val;
-        if (1 < opsz)
-            for (int i = 0; i < opsz; ++i)
-                OPEN[i] = OPEN[i + 1];
-        OPEN = realloc(OPEN, sizeof(stptr) * (--opsz));
-    }
-    result[0] = acc[0] / double(counter[0]);
-    result[1] = acc[1] / double(counter[1]);
-    return result;
+    stptr * treearray = collapse(root);
+    stptr newroot = restore(treearray, 0, nc - 1);
+    free(treearray);
+    return newroot;
 }
 
+stptr pop(stptr **stack, ui *stsz)
+{
+    stptr temp = (*stack)[*stsz - 1];
+    *stack = realloc(*stack, sizeof(stptr) * (--(*stsz)));
+    return temp;
+}
 
+stptr restore(stptr *treearray, int start, int end)
+{
+    if (start > end)
+        return NULL;
+    int middle = (start + end) / 2;
+    stptr newroot = treearray[middle];
+    newroot->left = restore(treearray, start, middle - 1);
+    newroot->right = restore(treearray, middle + 1, end);
+    return newroot;
+}
+
+   
 
