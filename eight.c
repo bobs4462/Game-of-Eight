@@ -11,6 +11,7 @@ goeptr buildss(char initstate[9]) //build state-space
     char testboard[9];
     stptr index = malloc(sizeof(struct state));
     nc = 0;
+    stptr hit = NULL;
     goeptr root = create_state(initstate);
 
     index->val = get_s_code(root->board);
@@ -24,20 +25,20 @@ goeptr buildss(char initstate[9]) //build state-space
         for (f = 4; f-->0;) {
             for (int i = 9; i--; testboard[i] = cl->board[i]); 
             if ((*m[0]) (testboard))
-                if (attach(index, (grl = get_s_code(testboard)))) {
+                if (attach(index, (grl = get_s_code(testboard)), &hit)) {
                     cl->moves = realloc(cl->moves, sizeof(goeptr) * (++(cl->mc)));
-                    cl->moves[cl->mc - 1] = getadr(index, grl);
+                    cl->moves[cl->mc - 1] = hit;
                 }
                 else {
                     nl = realloc(nl, sizeof(goeptr) * (++nlw));
                     nl[nlw - 1] = create_state(testboard);
-                    insertadr(index, nl[nlw - 1], grl);
+                    hit->adr = nl[nlw - 1];
                     cl->moves = realloc(cl->moves, sizeof(goeptr) * (++(cl->mc)));
                     cl->moves[cl->mc - 1] = nl[nlw - 1];
                 }
         } 
     }
-        
+
 }
 
 char *mright(char *cstate)//move right

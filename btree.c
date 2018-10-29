@@ -1,22 +1,26 @@
 #include <btree.h>
 ui nc; //node count
 
-int attach(stptr root, ui newval) 
+int attach(stptr root, ui newval, stptr *hit) 
 {
     stptr tracker = root;
     while (1) {
-        if (newval == tracker->val)
+        if (newval == tracker->val) {
+            *hit = tracker;
             return 1;
+        }
         else if ((newval < tracker->val) && (tracker->left != NULL))
             tracker = tracker->left;
         else if ((newval < tracker->val) && (tracker->left == NULL)) {
             tracker->left = leaf(newval); 
+            *hit = tracker->left;
             return 0;
         }
         else if ((newval > tracker->val) && (tracker->right != NULL))
             tracker = tracker->right;
         else { 
             tracker->right = leaf(newval); 
+            *hit = tracker->right;
             return 0;
         }
     }
@@ -32,35 +36,6 @@ stptr leaf(ui newval)
     temp->right = NULL;
     temp->left = NULL;
     return temp;
-}
-
-goeptr getadr(stptr root, ui code)
-{
-    stptr tracker = root;
-    while (1) {
-        if (code == tracker->val) {
-            return tracker->adr;
-        }
-        else if (code > tracker->val)
-            tracker = tracker->right;
-        else 
-            tracker = tracker->left;
-    }
-}
-
-void insertadr(stptr root, goeptr address, ui code)
-{
-    stptr tracker = root;
-    while (1) {
-        if (code == tracker->val) {
-            tracker->adr = address;
-            break;
-        }
-        else if (code > tracker->val)
-            tracker = tracker->right;
-        else 
-            tracker = tracker->left;
-    }
 }
 
 stptr rebalance(stptr root)

@@ -16,7 +16,7 @@ typedef unsigned int ui;
 
 extern ui nc;
 
-int attach(stptr root, ui newval);
+int attach(stptr root, ui newval, stptr *hit);
 stptr leaf(ui newval);
 stptr * collapse(stptr root);
 void push(stptr **stack, ui *stsz, stptr node);
