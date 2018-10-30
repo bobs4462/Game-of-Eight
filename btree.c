@@ -13,6 +13,7 @@ int attach(stptr root, ui newval, stptr *hit)
             tracker = tracker->left;
         else if ((newval < tracker->val) && (tracker->left == NULL)) {
             tracker->left = leaf(newval); 
+            ++nc;
             *hit = tracker->left;
             return 0;
         }
@@ -20,6 +21,7 @@ int attach(stptr root, ui newval, stptr *hit)
             tracker = tracker->right;
         else { 
             tracker->right = leaf(newval); 
+            ++nc;
             *hit = tracker->right;
             return 0;
         }
@@ -53,29 +55,29 @@ stptr * collapse(stptr root)
     stptr tracker = root; ui stsz = 1, i = 0;
     do {
         while (tracker) {
-            push(&stack, &stsz, tracker); 
+            spush(&stack, &stsz, tracker); 
             tracker = tracker->left;
         }
-        treearray[i] = pop(&stack, &stsz);
+        treearray[i] = spop(&stack, &stsz);
         tracker = treearray[i++]->right;
     } while (i < nc);
     return treearray;
 }
 
-void push(stptr **stack, ui *stsz, stptr node)
+void spush(stptr **stack, ui *stsz, stptr node)
 {
     *stack = realloc(*stack, sizeof(stptr) * (++(*stsz)));
     (*stack)[*stsz - 1] = node;
 }
 
-stptr pop(stptr **stack, ui *stsz)
+stptr spop(stptr **stack, ui *stsz)
 {
     stptr temp = (*stack)[*stsz - 1];
     *stack = realloc(*stack, sizeof(stptr) * (--(*stsz)));
     return temp;
 }
 
-stptr restore(stptr *treearray, int start, int end)
+stptr restore(stptr *treearray, ui start, ui end)
 {
     if (start > end)
         return NULL;

@@ -1,8 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <eight.h>
 
-typedef unsigned int ui;
 
 struct state {
     ui val;
@@ -19,7 +16,7 @@ extern ui nc;
 int attach(stptr root, ui newval, stptr *hit);
 stptr leaf(ui newval);
 stptr * collapse(stptr root);
-void push(stptr **stack, ui *stsz, stptr node);
+void spush(stptr **stack, ui *stsz, stptr node);
+stptr spop(stptr **stack, ui *stsz);
 stptr rebalance(stptr root);
-stptr pop(stptr **stack, ui *stsz);
-stptr restore(stptr *treearray, int start, int end);
+stptr restore(stptr *treearray, ui start, ui end);

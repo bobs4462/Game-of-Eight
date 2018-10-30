@@ -1,43 +1,56 @@
 //make cl movable
-#include <eight.h>
+#define EIGHTH
 #include <btree.h>
 
-const char * (*m[4]) (char *) = { mright, mleft, mdown, mup }; 
+char * (*m[4]) (char *) = { mright, mleft, mdown, mup }; 
 
 goeptr buildss(char initstate[9]) //build state-space
 {
-    ui clw = 1, nlw = 0, f = 0, grl = 0; 
-    goeptr *cl = NULL, *nl = NULL;
-    char testboard[9];
-    stptr index = malloc(sizeof(struct state));
-    nc = 0;
-    stptr hit = NULL;
-    goeptr root = create_state(initstate);
+    ui f = 0, grl = 0, gss = 1;  //function index, general counter, goeptr stack size
+    ui balance = 500;//number of insertions to index before rebalacing the it;
+    goeptr *gstack = malloc(sizeof(goeptr)); //goeptr stack for keeping intermediate board states before processing
+    char testboard[9];//temporary array for storing board states
 
-    index->val = get_s_code(root->board);
+    stptr index = malloc(sizeof(struct state)); //root of index b tree
+   
+    nc = 1;//index entry count
+    stptr hit = NULL; //vertex of index tree where new node was attached or match was found
+
+    goeptr root = create_state(initstate);//first vertex of state space aka initial state
+    goeptr imt = NULL; //intermediate pointer to goe struct, to keep popped values from gstack 
+
+    index->val = get_s_code(root->board);//initalizing root of index btree
     index->adr = root;
     index->left = index->right = NULL;
 
-    cl = malloc(sizeof(goeptr));
-    cl = root;
+    *gstack = root; //"pushing" first element to stack to kickstart SS build process
 
-    while (clw) {
-        for (f = 4; f-->0;) {
-            for (int i = 9; i--; testboard[i] = cl->board[i]); 
-            if ((*m[0]) (testboard))
-                if (attach(index, (grl = get_s_code(testboard)), &hit)) {
-                    cl->moves = realloc(cl->moves, sizeof(goeptr) * (++(cl->mc)));
-                    cl->moves[cl->mc - 1] = hit;
+    while (gstack) {//loop will terminate once all possible states have been processed and added to graph
+        imt = gpop(&gstack, &gss); //getting board state from stack for subsequent processing
+
+        for (f = 4; f-->0;) { //apply 4 operators to board state to get new states
+            for (int i = 9; i--; testboard[i] = imt->board[i]); //copy board state to temporary place
+
+            if ((*m[0]) (testboard)) //true only if move is possible
+                if (attach(index, get_s_code(testboard), &hit)) {//if state already has been processed returns true
+                    imt->moves = realloc(imt->moves, sizeof(goeptr) * (++(imt->mc)));//add connection between state under
+                    imt->moves[imt->mc - 1] = hit->adr;                              //procession and the one that already has been processed
                 }
                 else {
-                    nl = realloc(nl, sizeof(goeptr) * (++nlw));
-                    nl[nlw - 1] = create_state(testboard);
-                    hit->adr = nl[nlw - 1];
-                    cl->moves = realloc(cl->moves, sizeof(goeptr) * (++(cl->mc)));
-                    cl->moves[cl->mc - 1] = nl[nlw - 1];
+                    gpush(&gstack, &gss, create_state(testboard));      //if state is new push it to stack
+                    imt->moves = realloc(imt->moves, sizeof(goeptr) * (++(imt->mc)));//and add necessary connection
+                    imt->moves[imt->mc - 1] = hit->adr = gstack[gss - 1];
+                    --balance;//insertion took place
                 }
         } 
+        if (!balance) //500 insertions have been performed
+            rebalance(index);
+
+        if (!gss)//all states have been processed, time to get out of loop
+            gstack = NULL;
     }
+
+    return root;//for subsequent search algorithm;
 
 }
 
@@ -93,8 +106,7 @@ ui get_s_code(char *board) //get state code
 {
     ui code = 0, i = 9;
     while (i-->0)
-        if (board[i])
-            code = (board[i] - '0') * powoften(i);
+        code += board[i] * powoften(i);
     return code;
 }
 
@@ -113,4 +125,17 @@ goeptr create_state(char *board)
     st->moves = NULL;
     st->mc = 0;
     return st;
+}
+
+void gpush(goeptr **gstack, ui *gss, goeptr node)
+{
+    *gstack = realloc(*gstack, sizeof(goeptr) * (++(*gss)));
+    (*gstack)[*gss - 1] = node;
+}
+
+goeptr gpop(goeptr **gstack, ui *gss)
+{
+    goeptr temp = (*gstack)[*gss - 1];
+    *gstack = realloc(*gstack, sizeof(goeptr) * (--(*gss)));
+    return temp;
 }
