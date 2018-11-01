@@ -1,3 +1,5 @@
+# Vim sessions
+*.vim
 # Prerequisites
 *.d
 

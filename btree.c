@@ -1,5 +1,5 @@
-#include <btree.h>
-ui nc; //node count
+#include <functions.h>
+int nc; //node count
 
 int attach(stptr root, ui newval, stptr *hit) 
 {
@@ -9,8 +9,7 @@ int attach(stptr root, ui newval, stptr *hit)
             *hit = tracker;
             return 1;
         }
-        else if ((newval < tracker->val) && (tracker->left != NULL))
-            tracker = tracker->left;
+        else if ((newval < tracker->val) && (tracker->left != NULL)) tracker = tracker->left;
         else if ((newval < tracker->val) && (tracker->left == NULL)) {
             tracker->left = leaf(newval); 
             ++nc;
@@ -40,9 +39,10 @@ stptr leaf(ui newval)
     return temp;
 }
 
+
 stptr rebalance(stptr root)
 {
-    stptr * treearray = collapse(root);
+    stptr *treearray = collapse(root);
     stptr newroot = restore(treearray, 0, nc - 1);
     free(treearray);
     return newroot;
@@ -50,34 +50,40 @@ stptr rebalance(stptr root)
 
 stptr * collapse(stptr root)
 {
+    stptr nullifier = NULL;
     stptr *treearray = malloc(sizeof(stptr) * nc);
     stptr *stack = malloc(sizeof(stptr));
-    stptr tracker = root; ui stsz = 1, i = 0;
+    stptr tracker = root; 
+    int stsz = 1, i = 0;
     do {
-        while (tracker) {
+        while (tracker != NULL) {
             spush(&stack, &stsz, tracker); 
             tracker = tracker->left;
         }
-        treearray[i] = spop(&stack, &stsz);
+        nullifier = spop(&stack, &stsz);
+        treearray[i] = nullifier;  
         tracker = treearray[i++]->right;
+        nullifier->left = nullifier->right = NULL;
     } while (i < nc);
+    free(stack);
     return treearray;
 }
 
-void spush(stptr **stack, ui *stsz, stptr node)
+void spush(stptr **stack, int *stsz, stptr node)
 {
     *stack = realloc(*stack, sizeof(stptr) * (++(*stsz)));
     (*stack)[*stsz - 1] = node;
 }
 
-stptr spop(stptr **stack, ui *stsz)
+stptr spop(stptr **stack, int *stsz)
 {
+    int sts = *stsz;
     stptr temp = (*stack)[*stsz - 1];
     *stack = realloc(*stack, sizeof(stptr) * (--(*stsz)));
     return temp;
 }
 
-stptr restore(stptr *treearray, ui start, ui end)
+stptr restore(stptr *treearray, int start, int end)
 {
     if (start > end)
         return NULL;
@@ -88,5 +94,23 @@ stptr restore(stptr *treearray, ui start, ui end)
     return newroot;
 }
 
-   
+void treedelete(stptr root)
+{
+    ui stsz = 1;
+    stptr *stack = malloc(sizeof(stptr));
+    stptr node = *stack = root;
+
+
+    while (stsz) {
+        if (node->left)
+            spush(&stack, &stsz, node->left);
+        if (node->right)
+            spush(&stack, &stsz, node->right);
+        free(node);
+        node = spop(&stack, &stsz);
+    }
+}
+
+
+
 

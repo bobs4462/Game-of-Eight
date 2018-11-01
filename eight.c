@@ -1,13 +1,11 @@
-//make cl movable
-#define EIGHTH
-#include <btree.h>
+#include <functions.h>
 
 char * (*m[4]) (char *) = { mright, mleft, mdown, mup }; 
 
-goeptr buildss(char initstate[9]) //build state-space
+goeptr buildss(char initstate[9], stptr *ind) //build state-space
 {
+    ui balance = 500;
     ui f = 0, grl = 0, gss = 1;  //function index, general counter, goeptr stack size
-    ui balance = 500;//number of insertions to index before rebalacing the it;
     goeptr *gstack = malloc(sizeof(goeptr)); //goeptr stack for keeping intermediate board states before processing
     char testboard[9];//temporary array for storing board states
 
@@ -31,25 +29,27 @@ goeptr buildss(char initstate[9]) //build state-space
         for (f = 4; f-->0;) { //apply 4 operators to board state to get new states
             for (int i = 9; i--; testboard[i] = imt->board[i]); //copy board state to temporary place
 
-            if ((*m[0]) (testboard)) //true only if move is possible
+            if ((*m[f]) (testboard)) //true only if move is possible
                 if (attach(index, get_s_code(testboard), &hit)) {//if state already has been processed returns true
                     imt->moves = realloc(imt->moves, sizeof(goeptr) * (++(imt->mc)));//add connection between state under
-                    imt->moves[imt->mc - 1] = hit->adr;                              //procession and the one that already has been processed
+                    imt->moves[imt->mc - 1] = hit->adr;                              //processing and the one that already has been processed
                 }
                 else {
                     gpush(&gstack, &gss, create_state(testboard));      //if state is new push it to stack
                     imt->moves = realloc(imt->moves, sizeof(goeptr) * (++(imt->mc)));//and add necessary connection
                     imt->moves[imt->mc - 1] = hit->adr = gstack[gss - 1];
-                    --balance;//insertion took place
+                    --balance;
                 }
         } 
-        if (!balance) //500 insertions have been performed
-            rebalance(index);
+        if (!balance) {//500 insertions have been performed
+            index = rebalance(index);//rebalance the tree
+            balance = 500; //resetting balance counter
+        }
 
         if (!gss)//all states have been processed, time to get out of loop
             gstack = NULL;
     }
-
+    *ind = index;
     return root;//for subsequent search algorithm;
 
 }
@@ -104,9 +104,11 @@ char *mup(char *cstate) //move up
 
 ui get_s_code(char *board) //get state code
 {
-    ui code = 0, i = 9;
-    while (i-->0)
-        code += board[i] * powoften(i);
+    ui code = 0, i = 0;
+    while (i < 9) {
+        code += board[i] * powoften(9 - i - 1);
+        ++i;
+    }
     return code;
 }
 

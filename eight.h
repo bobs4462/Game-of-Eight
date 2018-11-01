@@ -15,14 +15,14 @@ char *mright(char *cstate);
 char *mleft(char *cstate);
 char *mdown(char *cstate);
 char *mup(char *cstate);
-goeptr buildss(char initstate[9]);//build state-space
-ui get_s_code(char *board);//get state code
+goeptr buildss(char initstate[9], stptr *ind);//build state-space
 ui powoften(ui i); //power of ten
 goeptr create_state(char *board);
 void gpush(goeptr **gstack, ui *gss, goeptr node);
 goeptr gpop(goeptr **gstack, ui *gss);
 #endif
+ui get_s_code(char *board);//get state code
 
 #ifdef MAINH
-goeptr buildss(char initstate[9]);//build state-space
+goeptr buildss(char initstate[9],stptr *ind);//build state-space
 #endif
